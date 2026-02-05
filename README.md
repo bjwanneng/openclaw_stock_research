@@ -41,7 +41,7 @@ openclaw_stock_research/
 
 ```bash
 # 1. 下载部署脚本
-wget https://raw.githubusercontent.com/bjwanneng/openclaw-stock-research/main/deploy_vps.sh
+wget https://github.com/bjwanneng/openclaw_stock_research/blob/master/deploy_vps.sh
 chmod +x deploy_vps.sh
 
 # 2. 执行部署
@@ -66,12 +66,14 @@ chmod +x deploy_vps.sh
 
 ### 方式二：手动部署
 
+#### 1. 克隆仓库
+
 ```bash
-git clone https://github.com/bjwanneng/openclaw-stock-research.git
-cd openclaw-stock-research
+git clone https://github.com/bjwanneng/openclaw_stock_research.git
+cd openclaw_stock_research
 ```
 
-### 2. 创建虚拟环境
+#### 2. 创建虚拟环境
 
 ```bash
 python -m venv venv
@@ -80,12 +82,115 @@ source venv/bin/activate  # Linux/Mac
 venv\Scripts\activate  # Windows
 ```
 
-### 3. 安装依赖
+#### 3. 安装依赖
 
 ```bash
 pip install -e .
 # 或安装开发依赖
 pip install -e ".[dev]"
+```
+
+#### 4. 配置环境变量
+
+```bash
+cp .env.example .env
+# 编辑 .env 文件，配置必要的环境变量（特别是 AKSHARE_DATA_PATH）
+```
+
+#### 5. 部署到 OpenClaw
+
+**重要**：不要直接复制 tools 文件到 `custom_tools`，因为 tools 依赖 `core`、`utils`、`adapters` 等模块。正确的做法是：
+
+1. **将整个项目部署到 OpenClaw 工作区**：
+
+```bash
+# 创建 OpenClaw 工作区目录
+mkdir -p ~/.openclaw/workspace
+
+# 将整个项目复制到 OpenClaw 工作区（推荐使用软链接或 git clone）
+cd ~/.openclaw/workspace
+git clone https://github.com/bjwanneng/openclaw_stock_research.git
+
+# 或者如果当前已在项目目录，创建软链接
+# ln -s /path/to/your/project ~/.openclaw/workspace/openclaw_stock_research
+```
+
+2. **复制 wrapper 文件到 custom_tools**：
+
+项目中已提供了 wrapper 文件，它们会自动处理路径设置和模块导入：
+
+```bash
+# 创建 custom_tools 目录
+mkdir -p ~/.openclaw/workspace/custom_tools
+
+# 复制项目中提供的 wrapper 文件
+cp ~/.openclaw/workspace/openclaw_stock_research/deploy/openclaw_wrappers/ak_market_tool.py \
+    ~/.openclaw/workspace/custom_tools/
+cp ~/.openclaw/workspace/openclaw_stock_research/deploy/openclaw_wrappers/web_quote_validator.py \
+    ~/.openclaw/workspace/custom_tools/
+```
+
+**wrapper 文件说明**：
+- `ak_market_tool.py` - 自动设置 `sys.path`、加载 `.env`、导入实际的 tool
+- `web_quote_validator.py` - 同上
+- 它们位于项目的 `deploy/openclaw_wrappers/` 目录下
+
+3. **复制 Skill 文件**：
+
+```bash
+# 创建 skills 目录并复制 SKILL.md
+mkdir -p ~/.openclaw/workspace/skills/stock-research
+cp ~/.openclaw/workspace/openclaw_stock_research/SKILL.md ~/.openclaw/workspace/skills/stock-research/
+```
+
+#### 6. 配置 OpenClaw
+
+编辑 `~/.openclaw/config.json`，添加 tools 和 skills 的注册信息（添加到原有的tools和skills数组中即可）：
+
+```json
+{
+  "version": "1.0.0",
+  "python_path": "~/.openclaw/workspace/openclaw_stock_research/venv/bin/python",
+  "skills": [
+    {
+      "name": "StockAnalystPro",
+      "path": "~/.openclaw/workspace/skills/stock-research/SKILL.md",
+      "enabled": true
+    }
+  ],
+  "tools": [
+    {
+      "name": "ak_market_tool",
+      "path": "~/.openclaw/workspace/custom_tools/ak_market_tool.py",
+      "enabled": true
+    },
+    {
+      "name": "web_quote_validator",
+      "path": "~/.openclaw/workspace/custom_tools/web_quote_validator.py",
+      "enabled": true
+    }
+  ]
+}
+```
+
+**注意事项**：
+- 如果 `~/.openclaw/config.json` 已存在，请**在原有配置基础上添加**，不要覆盖原有配置
+- `python_path` 需要指向你创建的虚拟环境的 Python 解释器路径
+- `skills` 和 `tools` 是数组，将本项目的配置追加到原有数组中即可
+
+#### 7. 验证部署
+
+测试工具是否能正常运行：
+
+```bash
+# 激活虚拟环境
+source venv/bin/activate
+
+# 测试 ak_market_tool
+python -c "from openclaw_stock.tools.ak_market_tool import ak_market_tool; print('ak_market_tool 加载成功')"
+
+# 测试 web_quote_validator
+python -c "from openclaw_stock.tools.web_quote_validator import web_quote_validator_tool; print('web_quote_validator 加载成功')"
 ```
 
 ## 环境变量配置
