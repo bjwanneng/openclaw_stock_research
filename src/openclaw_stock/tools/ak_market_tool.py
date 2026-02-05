@@ -19,7 +19,8 @@ import pandas as pd
 
 from ..core.config import get_config
 from ..core.exceptions import DataSourceError, SymbolNotFoundError
-from ..adapters.akshare_adapter import get_adapter
+# 修复：使用修复后的东方财富适配器
+from ..adapters.akshare_adapter_em import get_adapter_em
 from ..utils.logger import get_logger
 from ..utils.decorators import tool, require_env, log_execution, retry, cache_result
 
@@ -44,9 +45,10 @@ class AKMarketTool:
     """
 
     def __init__(self):
-        self.adapter = get_adapter()
+        # 修复：使用修复后的东方财富适配器
+        self.adapter = get_adapter_em()
         self.config = get_config()
-        logger.info("[AKMarketTool] 初始化完成")
+        logger.info("[AKMarketTool] 初始化完成（使用东方财富数据源）")
 
     def _validate_symbol(self, symbol: str, market: str) -> None:
         """
