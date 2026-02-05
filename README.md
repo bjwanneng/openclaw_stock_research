@@ -193,23 +193,6 @@ python -c "from openclaw_stock.tools.ak_market_tool import ak_market_tool; print
 python -c "from openclaw_stock.tools.web_quote_validator import web_quote_validator_tool; print('web_quote_validator 加载成功')"
 ```
 
-## 环境变量配置
-
-复制 `.env.example` 到 `.env` 并根据实际情况配置：
-
-```bash
-cp .env.example .env
-```
-
-关键环境变量：
-
-| 变量名 | 必需 | 默认值 | 说明 |
-|--------|------|--------|------|
-| AKSHARE_DATA_PATH | 是 | - | AkShare数据缓存路径 |
-| PROXY_URL | 否 | - | 代理服务器地址 |
-| LOG_LEVEL | 否 | INFO | 日志级别 |
-| DEFAULT_TIMEOUT | 否 | 30 | 默认请求超时(秒) |
-
 ## 使用说明
 
 ### 1. 使用 ak_market_tool
