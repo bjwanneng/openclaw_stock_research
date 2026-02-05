@@ -40,16 +40,18 @@ openclaw_stock_research/
 如果您在 VPS 上部署 OpenClaw，可以使用我们提供的一键部署脚本：
 
 ```bash
-# 1. 下载部署脚本
-wget https://github.com/bjwanneng/openclaw_stock_research/blob/master/deploy_vps.sh
-chmod +x deploy_vps.sh
+# 1. 克隆项目仓库（不要下载 zip 或使用 wget 下载单个文件）
+git clone https://github.com/bjwanneng/openclaw_stock_research.git
+cd openclaw_stock_research
 
-# 2. 执行部署
-./deploy_vps.sh
-
-# 或者指定自定义工作区路径
-./deploy_vps.sh /path/to/your/workspace
+# 2. 执行部署脚本
+bash deploy/deploy_to_openclaw.sh
 ```
+
+**注意**：
+- **不要**使用 `wget` 或浏览器下载单个脚本文件，这会导致下载到 HTML 页面而不是脚本内容
+- **不要**从 GitHub 网页复制粘贴脚本内容，可能格式会被破坏
+- 必须使用 `git clone` 获取完整项目，然后执行脚本
 
 部署脚本会自动完成以下操作：
 - 检查系统依赖（Python 3.9+、Git）

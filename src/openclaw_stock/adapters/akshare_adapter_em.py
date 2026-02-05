@@ -40,7 +40,7 @@ class AKShareAdapterEM:
         # A股直接使用代码
         return symbol
 
-    def get_stock_zh_a_spot_em(self) -> pd.DataFrame:
+    def get_stock_zh_a_spot(self) -> pd.DataFrame:
         """使用东方财富获取A股实时行情
 
         注意: 新浪财经数据源经常被限制，所以直接使用东方财富数据源
@@ -54,7 +54,7 @@ class AKShareAdapterEM:
             logger.error(f"[AKShareAdapterEM] 东方财富数据源失败: {e}")
             raise DataSourceError(f"获取A股行情失败: {e}")
 
-    def get_stock_hk_spot_em(self) -> pd.DataFrame:
+    def get_stock_hk_spot(self) -> pd.DataFrame:
         """使用东方财富获取港股实时行情"""
         try:
             logger.debug("[AKShareAdapterEM] 使用 stock_hk_spot_em 获取港股实时行情...")
@@ -65,7 +65,7 @@ class AKShareAdapterEM:
             logger.error(f"[AKShareAdapterEM] 获取港股行情失败: {e}")
             raise DataSourceError(f"获取港股行情失败: {e}")
 
-    def get_stock_zh_a_hist_em(
+    def get_stock_zh_a_hist(
         self,
         symbol: str,
         period: Literal["daily", "weekly", "monthly"] = "daily",
@@ -96,7 +96,7 @@ class AKShareAdapterEM:
             logger.error(f"[AKShareAdapterEM] 获取K线数据失败: {e}")
             raise DataSourceError(f"获取{symbol}的K线数据失败: {e}")
 
-    def get_stock_hk_hist_em(
+    def get_stock_hk_hist(
         self,
         symbol: str,
         period: Literal["daily", "weekly", "monthly"] = "daily",
