@@ -26,7 +26,7 @@ print_error() {
 
 # 获取工作区路径
 WORKSPACE="${1:-$HOME/.openclaw/workspace}"
-REPO_URL="https://github.com/yourusername/openclaw-stock-research.git"  # 请替换为实际的仓库地址
+REPO_URL="https://github.com/bjwanneng/openclaw-stock-research.git"
 
 print_info "开始部署 OpenClaw 投研分析系统..."
 print_info "工作区路径: $WORKSPACE"

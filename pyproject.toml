@@ -10,7 +10,7 @@ readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.9"
 authors = [
-    {name = "OpenClaw Team", email = "team@openclaw.com"}
+    {name = "bjwanneng", email = "bjzhangwn@gmail.com"}
 ]
 keywords = ["stock", "finance", "akshare", "a-share", "hk-stock", "quant", "openclaw"]
 

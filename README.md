@@ -41,7 +41,7 @@ openclaw_stock_research/
 
 ```bash
 # 1. 下载部署脚本
-wget https://raw.githubusercontent.com/yourusername/openclaw-stock-research/main/deploy_vps.sh
+wget https://raw.githubusercontent.com/bjwanneng/openclaw-stock-research/main/deploy_vps.sh
 chmod +x deploy_vps.sh
 
 # 2. 执行部署
@@ -67,7 +67,7 @@ chmod +x deploy_vps.sh
 ### 方式二：手动部署
 
 ```bash
-git clone https://github.com/yourusername/openclaw-stock-research.git
+git clone https://github.com/bjwanneng/openclaw-stock-research.git
 cd openclaw-stock-research
 ```
 
@@ -129,6 +129,96 @@ result = ak_market_tool(
     end_date="20240131",
     adjust="qfq"
 )
+```
+
+## 虚拟环境自动激活（可选）
+
+### 方案一：工具脚本自动激活（推荐）
+
+工具脚本已经集成了自动检测和激活虚拟环境的功能。当工具被调用时，会自动查找并激活正确的虚拟环境。
+
+如果需要手动控制虚拟环境激活，可以使用 `venv_helper`：
+
+```python
+from openclaw_stock.utils.venv_helper import auto_activate
+
+# 在脚本开头调用，自动查找并激活虚拟环境
+auto_activate()
+
+# 后续代码将在正确的虚拟环境中运行
+from openclaw_stock.tools.ak_market_tool import ak_market_tool
+# ...
+```
+
+### 方案二：OpenClaw 启动时自动激活
+
+在 OpenClaw 的配置中，可以通过 `python_path` 指定虚拟环境的 Python 解释器路径。
+
+编辑 OpenClaw 配置文件（通常是 `~/.openclaw/config.json`）：
+
+```json
+{
+  "version": "1.0.0",
+  "python_path": "/home/username/.openclaw/workspace/openclaw-stock-research/venv/bin/python",
+  "skills": [
+    {
+      "name": "StockAnalystPro",
+      "path": "skills/stock-research/SKILL.md",
+      "enabled": true
+    }
+  ],
+  "tools": [
+    {
+      "name": "ak_market_tool",
+      "path": "custom_tools/ak_market_tool.py",
+      "enabled": true
+    },
+    {
+      "name": "web_quote_validator",
+      "path": "custom_tools/web_quote_validator.py",
+      "enabled": true
+    }
+  ]
+}
+```
+
+通过设置 `python_path` 指向虚拟环境的 Python 解释器，OpenClaw 将始终在该虚拟环境中运行所有工具和技能。
+
+### 方案三：使用激活脚本（兼容性好）
+
+在 `~/.openclaw/workspace/custom_tools/` 目录下创建激活脚本 `activate_venv.sh`：
+
+```bash
+#!/bin/bash
+# 激活虚拟环境脚本
+
+VENV_PATH="${VENV_PATH:-$HOME/.openclaw/workspace/openclaw-stock-research/venv}"
+
+if [ -f "$VENV_PATH/bin/activate" ]; then
+    source "$VENV_PATH/bin/activate"
+    echo "已激活虚拟环境: $VENV_PATH"
+else
+    echo "错误: 找不到虚拟环境: $VENV_PATH"
+    exit 1
+fi
+```
+
+然后在工具的 Python 文件开头添加：
+
+```python
+import os
+import subprocess
+
+# 尝试激活虚拟环境
+venv_path = os.path.expanduser("~/.openclaw/workspace/openclaw-stock-research/venv")
+if os.path.exists(f"{venv_path}/bin/activate"):
+    # 检查当前是否已在虚拟环境中
+    if not hasattr(__import__('sys'), 'real_prefix') and not (
+        hasattr(__import__('sys'), 'base_prefix') and
+        __import__('sys').base_prefix != __import__('sys').prefix
+    ):
+        # 重新执行当前脚本在虚拟环境中
+        os.execl(f"{venv_path}/bin/python", f"{venv_path}/bin/python", *sys.argv)
 ```
 
 ### 2. 使用 web_quote_validator
@@ -265,9 +355,9 @@ cp SKILL.md ~/.openclaw/workspace/skills/stock-research/
 
 ## 联系方式
 
-- 项目主页: https://github.com/yourusername/openclaw-stock-research
-- 问题反馈: https://github.com/yourusername/openclaw-stock-research/issues
-- 邮箱: your.email@example.com
+- 项目主页: https://github.com/bjwanneng/openclaw-stock-research
+- 问题反馈: https://github.com/bjwanneng/openclaw-stock-research/issues
+- 邮箱: bjzhangwn@gmail.com
 
 ---
 
