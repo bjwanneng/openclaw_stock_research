@@ -84,7 +84,8 @@ Repository = "https://github.com/openclaw/openclaw-stock-research.git"
 "Bug Tracker" = "https://github.com/openclaw/openclaw-stock-research/issues"
 Changelog = "https://github.com/openclaw/openclaw-stock-research/blob/main/CHANGELOG.md"
 
-[build.targets.wheel]
+# Hatchling 构建配置
+[tool.hatch.build.targets.wheel]
 packages = ["src/openclaw_stock"]
 
 [tool.black]
