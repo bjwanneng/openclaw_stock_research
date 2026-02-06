@@ -1,196 +1,405 @@
 ---
-name: stock-analyst-pro
-description: Professional A-share/Hong Kong stock research and analysis skill. Combines AkShare structured data with real-time web validation to provide in-depth research report synthesis. Use when analyzing Chinese stocks, getting stock quotes, or generating investment research reports.
-allowed-tools: Read, Grep, Glob, Bash, Task
+name: stock-analysis
+description: Professional stock analysis and selection system for A-share and Hong Kong stocks. Provides real-time market data, technical analysis, fundamental analysis, short-term and long-term stock selection, comprehensive stock analysis, support/resistance calculation, and real-time alerts. Based on akshare open-source database. Use when analyzing Chinese stocks, getting stock quotes, selecting stocks, or generating investment research reports.
+disable-model-invocation: false
+allowed-tools: [Read, Grep, Glob, Bash, Task]
 ---
 
-# Stock Analyst Pro
+# 股票分析与选股系统
 
-Professional A-share/Hong Kong stock research and analysis skill that combines AkShare structured data with real-time web validation to provide in-depth research report synthesis.
+## 工具位置
 
-## Definitions
+本技能依赖的 Python 模块位于项目源代码目录：
 
-### Name
-StockAnalystPro
+```
+${PROJECT_ROOT}/src/openclaw_stock/
+├── __init__.py              # 统一导出所有10个接口
+├── data/                    # 数据采集模块（3个接口）
+│   ├── market_data.py       # 接口1: fetch_market_data
+│   ├── financial_data.py    # 接口2: fetch_financial_data
+│   └── fund_flow.py         # 接口3: fetch_fund_flow
+├── analysis/                # 分析模块（4个接口）
+│   ├── technical_analysis.py    # 接口4, 9
+│   ├── fundamental_analysis.py  # 接口5
+│   └── stock_analyzer.py        # 接口8
+├── selection/               # 选股模块（2个接口）
+│   ├── short_term.py        # 接口6
+│   ├── long_term.py         # 接口7
+│   └── scoring_model.py
+└── alert/                   # 预警模块（1个接口）
+    └── alert_system.py      # 接口10
+```
 
-### Description
-专业A股/港股投研分析技能，结合AkShare结构化数据与Web实时验证，提供深度研报合成能力。适用于股票分析、获取实时行情、生成投研报告。
+### 命令行工具
 
-### Input Parameters
+项目还提供了命令行工具脚本，位于 `scripts/` 目录：
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| symbol | string | Yes | - | Stock code (e.g., "000001") |
-| market | string | No | sh | Market type: sh-Shanghai, sz-Shenzhen, hk-Hong Kong |
-| period | string | No | daily | K-line period: daily, weekly, monthly |
-| start_date | string | No | - | Historical data start date (YYYYMMDD) |
-| end_date | string | No | - | Historical data end date (YYYYMMDD) |
-| adjust | string | No | qfq | Adjustment method: qfq-forward, hfq-backward, none |
-| include_fundamental | bool | No | true | Include fundamental data |
-| include_capital_flow | bool | No | true | Include capital flow data |
-| include_news | bool | No | true | Include related news |
+```
+${PROJECT_ROOT}/scripts/
+└── stock_analyzer.py        # 命令行分析工具
+```
 
-### Output Format
+该脚本提供了以下命令：
 
-#### Success Response
+1. **单股票分析**
+   ```bash
+   python scripts/stock_analyzer.py analyze <股票代码> [--market <市场>]
+   ```
+   示例：
+   ```bash
+   python scripts/stock_analyzer.py analyze 000001 --market sz
+   ```
+
+2. **短期选股**
+   ```bash
+   python scripts/stock_analyzer.py select-short [--top-n <数量>]
+   ```
+   示例：
+   ```bash
+   python scripts/stock_analyzer.py select-short --top-n 50
+   ```
+
+3. **长期选股**
+   ```bash
+   python scripts/stock_analyzer.py select-long [--min-roe <ROE>] [--max-pe <PE>]
+   ```
+   示例：
+   ```bash
+   python scripts/stock_analyzer.py select-long --min-roe 15 --max-pe 30
+   ```
+
+4. **设置预警**
+   ```bash
+   python scripts/stock_analyzer.py alert-setup <股票代码> <类型> <条件>
+   ```
+   示例：
+   ```bash
+   python scripts/stock_analyzer.py alert-setup 000001 price "above:15.0"
+   ```
+
+## 简介
+
+本技能为个人投资者提供一套完整的股票分析和选股系统，基于 akshare 开源数据库，涵盖：
+- 股票后市研判（个股全方位分析）
+- 短期选股（1-15个交易日）
+- 中长期选股（1-12个月）
+- 实时预警
+
+## 触发条件
+
+用户需要以下任何一项服务时触发：
+1. 查询股票实时行情或历史数据
+2. 对单只股票进行全方位分析
+3. 计算技术指标或支撑压力位
+4. 获取基本面数据（PE/PB/ROE等）
+5. 进行短期选股（技术突破/资金驱动等策略）
+6. 进行中长期选股（价值投资/成长投资等策略）
+7. 设置股票实时预警
+
+## 执行逻辑
+
+当用户请求股票相关服务时，按以下流程执行：
+
+### 1. 解析用户需求
+
+分析用户的输入 $ARGUMENTS，确定：
+- 股票代码（symbol）
+- 市场类型（market: sh/sz/hk）
+- 请求类型（行情/分析/选股/预警）
+
+### 2. 数据采集
+
+使用 akshare 获取数据：
+
+```python
+# 获取实时行情
+from src.openclaw_stock import fetch_realtime_quote
+quote = fetch_realtime_quote(symbol='000001', market='sz')
+
+# 获取历史K线
+from src.openclaw_stock import fetch_market_data
+df = fetch_market_data(symbol='000001', period='daily', market='sz')
+
+# 获取财务数据
+from src.openclaw_stock import fetch_financial_data
+financial = fetch_financial_data(symbol='000001')
+
+# 获取资金流向
+from src.openclaw_stock import fetch_fund_flow
+flow = fetch_fund_flow(symbol='000001', days=5)
+```
+
+### 3. 分析处理
+
+根据需求执行相应分析：
+
+#### 技术分析
+```python
+from src.openclaw_stock import calculate_technical_indicators, calculate_support_resistance
+
+# 计算技术指标
+df_with_indicators = calculate_technical_indicators(df)
+
+# 计算支撑压力位
+sr = calculate_support_resistance(symbol='000001', df=df)
+```
+
+#### 基本面分析
+```python
+from src.openclaw_stock import calculate_fundamental_indicators
+
+# 计算基本面指标
+fundamental = calculate_fundamental_indicators(symbol='000001')
+```
+
+#### 个股综合分析
+```python
+from src.openclaw_stock import analyze_stock
+
+# 全方位分析
+result = analyze_stock(symbol='000001', market='sz')
+```
+
+#### 选股
+```python
+from src.openclaw_stock import short_term_stock_selector, long_term_stock_selector
+
+# 短期选股
+df_short = short_term_stock_selector(top_n=50)
+
+# 中长期选股
+df_long = long_term_stock_selector(min_roe=15, max_pe=30, top_n=30)
+```
+
+### 4. 预警设置（可选）
+
+```python
+from src.openclaw_stock import setup_alert
+
+# 设置价格预警
+alert_id = setup_alert(
+    symbol='000001',
+    alert_type='price',
+    condition={'operator': 'above', 'value': 15.0},
+    notification_method='console'
+)
+
+# 设置技术指标预警
+alert_id = setup_alert(
+    symbol='600519',
+    alert_type='technical',
+    condition={'indicator': 'macd', 'operator': 'golden_cross'},
+    notification_method='console'
+)
+```
+
+### 5. 生成报告
+
+将分析结果格式化为报告：
+
+```markdown
+=== 股票代码: 000001 综合分析报告 ===
+
+【基本信息】
+股票名称: 平安银行
+当前价格: 10.25 元
+涨跌幅: 1.48%
+
+【技术面分析】
+趋势判断: 上升趋势
+主要技术指标:
+  MA5: 10.12
+  MA20: 9.85
+  RSI6: 58.32
+交易信号: MACD金叉, 放量上涨
+
+【基本面分析】
+估值水平: 合理估值
+  PE(TTM): 4.52
+  PB: 0.52
+  ROE: 11.32%
+盈利能力: strong
+  净利率: 28.45%
+成长性: high
+  营收增长率: 15.23%
+  利润增长率: 22.18%
+
+【资金流向分析】
+近5日主力资金净流入：1234567.89 万元
+近5日散户资金净流入：-987654.32 万元
+资金面相符：主力资金持续流入
+
+【风险评估】
+综合风险等级：中等
+各项风险：
+  波动风险：medium
+  估值风险：low
+  趋势风险：low
+
+【后市预测】
+预测趋势：上涨
+概率：75%
+目标价格区间：
+  上限：11.79 元
+  下限：10.76 元
+时间周期：短期(1-2周)
+风险等级：中等
+关键影响因素：
+  - 技术趋势向上
+  - 盈利能力强
+  - 成长性高
+  - 主力资金净流入
+操作建议：推荐
+
+报告生成时间：2024-01-15 14:30:00
+```
+
+## 数据输出格式
+
+### 实时行情
 ```json
 {
-  "status": "success",
   "symbol": "000001",
   "market": "sz",
   "name": "平安银行",
-  "timestamp": "2024-01-15T14:30:00+08:00",
-  "data": {
-    "realtime": {
-      "price": 10.25,
-      "change": 0.15,
-      "change_pct": 1.48,
-      "volume": 152345600,
-      "amount": 1562345678.90
-    },
-    "validation": {
-      "is_valid": true,
-      "web_price": 10.25,
-      "reference_price": 10.26,
-      "diff_pct": 0.0975
-    },
-    "kline": {
-      "period": "daily",
-      "adjust": "qfq",
-      "data_count": 100,
-      "data": [...]
-    },
-    "fundamental": {
-      "pe_ttm": 4.52,
-      "pb": 0.52,
-      "dividend_yield": 2.15,
-      "market_cap": 198523456789.12
-    },
-    "capital_flow": {
-      "main_force_inflow": 1234567.89,
-      "retail_inflow": -987654.32,
-      "net_inflow": 246913.57
-    }
-  },
-  "news": [...],
-  "analysis": {
-    "summary": "...",
-    "technical_signals": [...],
-    "risk_warnings": [],
-    "investment_suggestion": "..."
-  },
-  "report": "# Markdown report..."
+  "price": 10.25,
+  "change": 0.15,
+  "change_pct": 1.48,
+  "volume": 152345600,
+  "amount": 1562345678.90,
+  "high": 10.35,
+  "low": 10.12,
+  "open": 10.18,
+  "pre_close": 10.10
 }
 ```
 
-#### Validation Failed Response
+### 技术分析结果
 ```json
 {
-  "status": "warning",
-  "symbol": "000001",
-  "market": "sz",
-  "data": {
-    "realtime": {...},
-    "validation": {
-      "is_valid": false,
-      "web_price": 10.25,
-      "reference_price": 10.35,
-      "diff_pct": 0.9662,
-      "warning": "[DATA_MISMATCH_WARNING] 价格偏差超过0.5%！"
-    }
+  "current_price": 10.25,
+  "trend": "上升趋势",
+  "signals": {
+    "macd_signal": "golden_cross",
+    "kdj_signal": "none",
+    "rsi_signal": "none",
+    "ma_signal": "bullish",
+    "boll_signal": "within_band",
+    "overall": "buy"
+  },
+  "indicators": {
+    "ma5": 10.12,
+    "ma10": 9.98,
+    "ma20": 9.85,
+    "rsi6": 58.32
   }
 }
 ```
 
-## Execution Flow
-
-```mermaid
-graph TD
-    A[Start Analysis] --> B[Call web_quote_validator for real-time price]
-    B --> C{Success?}
-    C -->|No| D[Return error]
-    C -->|Yes| E[Call ak_market_tool for historical data]
-    E --> F{Success?}
-    F -->|No| G[Return real-time data only]
-    F -->|Yes| H[Perform price validation]
-    H --> I{Diff < 0.5%?}
-    I -->|No| J[Add [DATA_MISMATCH_WARNING] tag]
-    I -->|Yes| K[Data validation passed]
-    J --> L[Call Browser to fetch news from Xueqiu/Cailianshe]
-    K --> L
-    L --> M[Generate Markdown research report]
-    M --> N[Return complete analysis report]
-    G --> N
-    D --> O[End]
-    N --> O
+### 基本面分析结果
+```json
+{
+  "valuation": {
+    "pe_ttm": 4.52,
+    "pb": 0.52,
+    "roe": 11.32
+  },
+  "profitability": {
+    "gross_margin": 35.2,
+    "net_margin": 28.45
+  },
+  "growth": {
+    "revenue_growth": 15.23,
+    "profit_growth": 22.18
+  },
+  "analysis": {
+    "valuation_level": "合理估值",
+    "profitability_level": "strong",
+    "growth_level": "high"
+  }
+}
 ```
 
-## Error Handling
-
-| Error Code | Description | Solution |
-|------------|-------------|----------|
-| DATA_SOURCE_ERROR | Data source access failed | Check network connection or proxy settings |
-| VALIDATION_ERROR | Data validation failed | Check if stock code is correct |
-| NETWORK_ERROR | Network request failed | Check network connection or proxy settings |
-| SYMBOL_NOT_FOUND | Stock code does not exist | Confirm code and market type |
-| PRICE_MISMATCH_ERROR | Price deviation too large | Manual review required |
-
-## Environment Variables
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| AKSHARE_DATA_PATH | Yes | - | AkShare data cache path |
-| PROXY_URL | No | - | Proxy server address |
-| LOG_LEVEL | No | INFO | Log level |
-
-## Usage Examples
-
-### Example 1: Complete Research Report
-
-```python
-# Analyze Ping An Bank comprehensive data
-stock_research_pro(
-    symbol="000001",
-    market="sz",
-    period="daily",
-    start_date="20231001",
-    end_date="20240115",
-    adjust="qfq",
-    include_fundamental=True,
-    include_capital_flow=True,
-    include_news=True
-)
+### 选股结果
+```json
+{
+  "symbol": "000001",
+  "name": "平安银行",
+  "price": 10.25,
+  "change_pct": 1.48,
+  "volume": 152345600,
+  "turnover_rate": 7.85,
+  "technical_score": 35,
+  "fund_score": 25,
+  "sentiment_score": 18,
+  "news_score": 8,
+  "total_score": 86,
+  "signals": "突破均线多头排列; MACD金叉; 放量上涨"
+}
 ```
 
-### Example 2: Hong Kong Stock Analysis
-
-```python
-# Analyze Tencent Holdings
-stock_research_pro(
-    symbol="00700",
-    market="hk",
-    period="daily",
-    include_fundamental=True,
-    include_capital_flow=False  # Hong Kong stocks don't support capital flow
-)
+### 预警结果
+```json
+{
+  "id": "000001_price_20240115143000",
+  "symbol": "000001",
+  "alert_type": "price",
+  "status": "triggered",
+  "created_at": "2024-01-15T14:30:00",
+  "triggered_at": "2024-01-15T14:35:00",
+  "triggered_value": 15.0,
+  "notification_methods": ["console"]
+}
 ```
 
-### Example 3: Quick Real-time Quote
+## 错误处理
 
-```python
-# Get real-time quote only (no historical data)
-stock_research_pro(
-    symbol="600519",
-    market="sh",
-    start_date=None,  # No date specified = no historical data
-    end_date=None
-)
+### 数据源错误
+```json
+{
+  "status": "error",
+  "error_code": "DATA_SOURCE_ERROR",
+  "message": "无法访问数据源，请检查网络连接或代理设置",
+  "symbol": "000001",
+  "market": "sz"
+}
 ```
 
-## Notes
+### 股票代码不存在
+```json
+{
+  "status": "error",
+  "error_code": "SYMBOL_NOT_FOUND",
+  "message": "股票代码不存在: sz:999999",
+  "symbol": "999999",
+  "market": "sz"
+}
+```
 
-1. **Data Delay**: Real-time quotes may have 15-minute delay (exchange regulations)
-2. **Hong Kong Stock Limitations**: Some features (e.g., northbound capital flow) only apply to A-shares
-3. **Rate Limiting**: Control call frequency to avoid stressing data sources
-4. **Proxy Configuration**: Set PROXY_URL environment variable if access is restricted
-5. **Price Validation**: Manual review required when price deviation exceeds 0.5%
+### 价格偏差警告
+```json
+{
+  "status": "warning",
+  "warning_code": "PRICE_MISMATCH",
+  "message": "[DATA_MISMATCH_WARNING] 价格偏差超过0.5%！Web价格(10.25)与参考价格(10.35)差异为0.9662%",
+  "symbol": "000001",
+  "web_price": 10.25,
+  "reference_price": 10.35,
+  "diff_pct": 0.9662
+}
+```
+
+## 注意事项
+
+1. **数据延迟**: 实时行情数据可能有15分钟延迟（交易所规定）
+2. **港股限制**: 部分功能（如北向资金）仅适用于A股
+3. **频率限制**: 注意akshare的API调用频率限制
+4. **风险提示**: 本系统仅供参考，不构成投资建议
+5. **数据准确性**: 财务数据以公司公告为准
+
+## 版本信息
+
+- **Version**: 1.0.0
+- **Author**: OpenClaw Team
+- **Last Updated**: 2024-02-05
+- **Dependencies**: akshare, pandas, numpy

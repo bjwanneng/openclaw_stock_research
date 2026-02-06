@@ -1,127 +1,114 @@
 """
-Pydantic数据模型定义
+数据模型定义（纯Python字典版本）
 
-定义投研分析系统中使用的所有数据模型
+不使用Pydantic，避免v1/v2兼容性问题
+参考akshare的设计，使用纯Python字典和pandas DataFrame
 """
 
 from typing import Optional, List, Dict, Any, Literal
 from datetime import datetime, date
 from decimal import Decimal
-from pydantic import BaseModel, Field, validator, field_validator
 
 
-class StockSymbol(BaseModel):
-    """股票代码模型"""
-
-    symbol: str = Field(..., description="股票代码（如 000001, 00700）")
-    market: Literal["sh", "sz", "hk"] = Field(..., description="市场类型: sh-上证, sz-深证, hk-港股")
-    name: Optional[str] = Field(None, description="股票名称")
-
-    @field_validator("symbol")
-    @classmethod
-    def validate_symbol(cls, v: str) -> str:
-        """验证股票代码格式"""
-        v = v.strip().upper()
-        if not v.isalnum():
-            raise ValueError("股票代码只能包含字母和数字")
-        return v
-
-    def __str__(self) -> str:
-        return f"{self.market}:{self.symbol}"
+def create_stock_symbol(
+    symbol: str,
+    market: Literal["sh", "sz", "hk"],
+    name: Optional[str] = None
+) -> Dict[str, Any]:
+    """创建股票代码字典"""
+    return {
+        "symbol": symbol.strip().upper(),
+        "market": market,
+        "name": name,
+        "__type__": "StockSymbol"
+    }
 
 
-class RealtimeQuote(BaseModel):
-    """实时行情数据模型"""
-
-    source: str = Field(..., description="数据来源")
-    symbol: str = Field(..., description="股票代码")
-    market: str = Field(..., description="市场类型")
-    name: str = Field(..., description="股票名称")
-    price: float = Field(..., description="当前价格")
-    change: float = Field(..., description="涨跌额")
-    change_pct: float = Field(..., description="涨跌幅(%)")
-    volume: int = Field(..., description="成交量（手）")
-    amount: float = Field(..., description="成交额（元）")
-    open: float = Field(..., description="开盘价")
-    high: float = Field(..., description="最高价")
-    low: float = Field(..., description="最低价")
-    pre_close: float = Field(..., description="昨收价")
-    timestamp: datetime = Field(default_factory=datetime.now, description="数据时间戳")
-
-
-class KlineData(BaseModel):
-    """K线数据模型"""
-
-    date: date = Field(..., description="日期")
-    open: float = Field(..., description="开盘价")
-    high: float = Field(..., description="最高价")
-    low: float = Field(..., description="最低价")
-    close: float = Field(..., description="收盘价")
-    volume: int = Field(..., description="成交量")
-    amount: float = Field(..., description="成交额")
-    amplitude: Optional[float] = Field(None, description="振幅(%)")
-    change_pct: Optional[float] = Field(None, description="涨跌幅(%)")
-    change: Optional[float] = Field(None, description="涨跌额")
-    turnover: Optional[float] = Field(None, description="换手率(%)")
-
-
-class FundamentalData(BaseModel):
-    """基本面数据模型"""
-
-    symbol: str = Field(..., description="股票代码")
-    pe_ttm: Optional[float] = Field(None, description="市盈率TTM")
-    pe_lyr: Optional[float] = Field(None, description="市盈率LYR")
-    pb: Optional[float] = Field(None, description="市净率")
-    ps_ttm: Optional[float] = Field(None, description="市销率TTM")
-    dividend_yield: Optional[float] = Field(None, description="股息率(%)")
-    market_cap: Optional[float] = Field(None, description="总市值")
-    float_market_cap: Optional[float] = Field(None, description="流通市值")
-    eps: Optional[float] = Field(None, description="每股收益")
-    bps: Optional[float] = Field(None, description="每股净资产")
-    roe: Optional[float] = Field(None, description="净资产收益率(%)")
-    debt_ratio: Optional[float] = Field(None, description="资产负债率(%)")
+def create_realtime_quote(
+    source: str,
+    symbol: str,
+    market: str,
+    name: str,
+    price: float,
+    change: float,
+    change_pct: float,
+    volume: int,
+    amount: float,
+    open_price: float,
+    high_price: float,
+    low_price: float,
+    pre_close: float,
+    timestamp: Optional[datetime] = None
+) -> Dict[str, Any]:
+    """创建实时行情字典"""
+    return {
+        "source": source,
+        "symbol": symbol,
+        "market": market,
+        "name": name,
+        "price": price,
+        "change": change,
+        "change_pct": change_pct,
+        "volume": volume,
+        "amount": amount,
+        "open": open_price,
+        "high": high_price,
+        "low": low_price,
+        "pre_close": pre_close,
+        "timestamp": timestamp or datetime.now(),
+        "__type__": "RealtimeQuote"
+    }
 
 
-class CapitalFlowData(BaseModel):
-    """资金流向数据模型"""
+def create_fundamental_data(
+    symbol: str,
+    pe_ttm: Optional[float] = None,
+    pe_lyr: Optional[float] = None,
+    pb: Optional[float] = None,
+    ps_ttm: Optional[float] = None,
+    dividend_yield: Optional[float] = None,
+    market_cap: Optional[float] = None,
+    float_market_cap: Optional[float] = None,
+    eps: Optional[float] = None,
+    bps: Optional[float] = None,
+    roe: Optional[float] = None,
+    debt_ratio: Optional[float] = None,
+) -> Dict[str, Any]:
+    """创建基本面数据字典"""
+    return {
+        "symbol": symbol,
+        "pe_ttm": pe_ttm,
+        "pe_lyr": pe_lyr,
+        "pb": pb,
+        "ps_ttm": ps_ttm,
+        "dividend_yield": dividend_yield,
+        "market_cap": market_cap,
+        "float_market_cap": float_market_cap,
+        "eps": eps,
+        "bps": bps,
+        "roe": roe,
+        "debt_ratio": debt_ratio,
+        "__type__": "FundamentalData"
+    }
 
-    symbol: str = Field(..., description="股票代码")
-    north_bound_inflow: Optional[float] = Field(None, description="北向资金净流入（亿元）")
-    main_force_inflow: Optional[float] = Field(None, description="主力资金净流入（亿元）")
-    retail_inflow: Optional[float] = Field(None, description="散户资金净流入（亿元）")
-    large_order_inflow: Optional[float] = Field(None, description="大单净流入（亿元）")
-    medium_order_inflow: Optional[float] = Field(None, description="中单净流入（亿元）")
-    small_order_inflow: Optional[float] = Field(None, description="小单净流入（亿元）")
 
-
-class ValidationResult(BaseModel):
-    """验证结果模型"""
-
-    is_valid: bool = Field(..., description="验证是否通过")
-    web_price: float = Field(..., description="Web抓取价格")
-    reference_price: float = Field(..., description="参考价格")
-    diff: float = Field(..., description="价格差异绝对值")
-    diff_pct: float = Field(..., description="价格差异百分比(%)")
-    threshold: float = Field(default=0.5, description="验证阈值(%)")
-    warning: Optional[str] = Field(None, description="警告信息")
-
-
-class StockResearchResult(BaseModel):
-    """股票投研分析结果模型"""
-
-    status: str = Field(..., description="状态: success/warning/error")
-    symbol: str = Field(..., description="股票代码")
-    market: str = Field(..., description="市场类型")
-    timestamp: datetime = Field(default_factory=datetime.now, description="分析时间戳")
-
-    # 数据部分
-    realtime: Optional[RealtimeQuote] = Field(None, description="实时行情数据")
-    validation: Optional[ValidationResult] = Field(None, description="验证结果")
-    kline: Optional[Dict[str, Any]] = Field(None, description="K线数据")
-    fundamental: Optional[FundamentalData] = Field(None, description="基本面数据")
-    capital_flow: Optional[CapitalFlowData] = Field(None, description="资金流向数据")
-
-    # 分析部分
-    analysis: Optional[Dict[str, Any]] = Field(None, description="综合分析结果")
-    warnings: Optional[List[str]] = Field(None, description="警告信息列表")
-    errors: Optional[List[str]] = Field(None, description="错误信息列表")
+def create_capital_flow_data(
+    symbol: str,
+    north_bound_inflow: Optional[float] = None,
+    main_force_inflow: Optional[float] = None,
+    retail_inflow: Optional[float] = None,
+    large_order_inflow: Optional[float] = None,
+    medium_order_inflow: Optional[float] = None,
+    small_order_inflow: Optional[float] = None,
+) -> Dict[str, Any]:
+    """创建资金流向数据字典"""
+    return {
+        "symbol": symbol,
+        "north_bound_inflow": north_bound_inflow,
+        "main_force_inflow": main_force_inflow,
+        "retail_inflow": retail_inflow,
+        "large_order_inflow": large_order_inflow,
+        "medium_order_inflow": medium_order_inflow,
+        "small_order_inflow": small_order_inflow,
+        "__type__": "CapitalFlowData"
+    }

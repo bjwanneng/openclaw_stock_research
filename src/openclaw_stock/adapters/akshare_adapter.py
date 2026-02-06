@@ -8,6 +8,11 @@ from typing import Optional, Literal, List, Dict, Any
 from datetime import datetime
 import pandas as pd
 
+try:
+    import akshare as ak
+except ImportError:
+    ak = None
+
 from ..core.exceptions import DataSourceError, SymbolNotFoundError
 from ..utils.logger import get_logger
 
@@ -39,17 +44,25 @@ class AKShareAdapter:
         self._cache: Dict[str, Any] = {}
         self._ak = None  # 延迟导入akshare
 
-    def _get_ak(self):
-        """延迟导入akshare"""
-        if self._ak is None:
+
+def _get_ak(self):
+    """延迟导入akshare"""
+    global ak
+    if self._ak is None:
+        if ak is not None:
+            self._ak = ak
+        else:
             try:
-                import akshare as ak
-                self._ak = ak
-                logger.debug("[AKShareAdapter] AkShare库加载成功")
+                import akshare as ak_module
             except ImportError as e:
                 logger.error(f"[AKShareAdapter] 无法导入AkShare: {str(e)}")
-                raise DataSourceError(f"无法导入AkShare库: {str(e)}")
-        return self._ak
+                raise DataSourceError(f"无法导入AkShare： {str(e)}")
+            else:
+                ak = ak_module
+                self._ak = ak_module
+        if self._ak:
+            logger.debug("[AKShareAdapter] AkShare库加载成功")
+    return self._ak
 
     def _format_hk_symbol(self, symbol: str) -> str:
         """

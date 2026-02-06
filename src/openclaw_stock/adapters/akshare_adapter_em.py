@@ -126,6 +126,83 @@ class AKShareAdapterEM:
             logger.error(f"[AKShareAdapterEM] 获取港股K线数据失败: {e}")
             raise DataSourceError(f"获取港股{symbol}的K线数据失败: {e}")
 
+    def get_stock_individual_info_em(self, symbol: str) -> pd.DataFrame:
+        """
+        获取个股基本信息
+
+        使用 akshare 的 stock_individual_info_em 函数获取个股基本信息
+
+        参数:
+            symbol: 股票代码（如 "000001"）
+
+        返回:
+            DataFrame: 个股基本信息
+        """
+        try:
+            logger.debug(f"[AKShareAdapterEM] 获取 {symbol} 的基本信息...")
+
+            df = self._ak.stock_individual_info_em(symbol=symbol)
+
+            logger.info(f"[AKShareAdapterEM] 成功获取 {symbol} 的基本信息")
+            return df
+
+        except Exception as e:
+            logger.error(f"[AKShareAdapterEM] 获取个股基本信息失败: {e}")
+            raise DataSourceError(f"获取{symbol}基本信息失败: {e}")
+
+    def get_stock_hsgt_hist_em(self) -> pd.DataFrame:
+        """
+        获取沪深港通历史数据（北向资金）
+
+        使用 akshare 的 stock_hsgt_hist_em 函数获取北向资金历史数据
+
+        返回:
+            DataFrame: 北向资金历史数据
+        """
+        try:
+            logger.debug("[AKShareAdapterEM] 获取北向资金历史数据...")
+
+            df = self._ak.stock_hsgt_hist_em()
+
+            logger.info(f"[AKShareAdapterEM] 成功获取北向资金历史数据，共{len(df)}条")
+            return df
+
+        except Exception as e:
+            logger.error(f"[AKShareAdapterEM] 获取北向资金数据失败: {e}")
+            raise DataSourceError(f"获取北向资金数据失败: {e}")
+
+    def get_stock_fund_flow_individual(self, symbol: str) -> pd.DataFrame:
+        """
+        获取个股资金流向数据
+
+        使用 akshare 的 stock_fund_flow_individual 函数获取个股资金流向
+
+        参数:
+            symbol: 股票代码（如 "000001"）
+
+        返回:
+            DataFrame: 个股资金流向数据
+        """
+        try:
+            logger.debug(f"[AKShareAdapterEM] 获取 {symbol} 的资金流向数据...")
+
+            symbol_clean = symbol.strip()
+            if symbol_clean.startswith(('sh', 'sz')):
+                symbol_for_request = symbol_clean
+            elif symbol_clean.startswith('6'):
+                symbol_for_request = f"sh{symbol_clean}"
+            else:
+                symbol_for_request = f"sz{symbol_clean}"
+
+            df = self._ak.stock_fund_flow_individual(symbol=symbol_for_request)
+
+            logger.info(f"[AKShareAdapterEM] 成功获取 {symbol} 的资金流向数据")
+            return df
+
+        except Exception as e:
+            logger.error(f"[AKShareAdapterEM] 获取个股资金流向失败: {e}")
+            raise DataSourceError(f"获取{symbol}资金流向失败: {e}")
+
 
 # 全局适配器实例
 _adapter_em: Optional[AKShareAdapterEM] = None

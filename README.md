@@ -1,81 +1,83 @@
-# OpenClaw 投研分析系统
+# OpenClaw 股票分析与选股系统
 
-基于 OpenClaw 框架的 A股/港股投研分析工具集，提供结构化数据获取、实时价格验证和深度研报合成能力。
+基于 OpenClaw 框架的 A股/港股投研分析工具集，提供完整的股票分析、选股和预警功能。
 
 ## 项目概述
 
-本项目包含以下核心组件：
+本项目基于 akshare 开源数据库，为个人投资者提供一套完整的股票分析和选股系统，涵盖：
 
-- **ak_market_tool**: 基于 AkShare 的结构化数据引擎，获取 A股/港股的实时行情、历史K线、基本面和资金流向数据
-- **web_quote_validator**: 基于 Requests 的实时验证器，通过东方财富/腾讯/新浪等数据源验证价格准确性
-- **StockAnalystPro Skill**: 复合技能，整合上述工具生成深度投研报告
+- **股票后市研判**：个股全方位分析（技术+基本面+资金流向）
+- **短期选股**（1-15个交易日）：技术突破/资金驱动/事件催化/情绪共振策略
+- **中长期选股**（1-12个月）：价值投资/成长投资/趋势投资/困境反转策略
+- **实时预警**：价格/成交量/技术指标/新闻事件预警
+
+## 核心功能
+
+### 10个标准接口
+
+本项目实现了设计文档中定义的全部10个接口：
+
+| 接口编号 | 接口名称 | 功能说明 |
+|---------|---------|---------|
+| 4.1-1 | `fetch_market_data()` | 获取股票历史K线数据 |
+| 4.1-2 | `fetch_financial_data()` | 获取财务报表数据 |
+| 4.1-3 | `fetch_fund_flow()` | 获取资金流向数据 |
+| 4.2-4 | `calculate_technical_indicators()` | 计算技术指标（MA/MACD/KDJ/RSI/布林带等） |
+| 4.2-5 | `calculate_fundamental_indicators()` | 计算基本面指标（PE/PB/ROE等） |
+| 4.3-6 | `short_term_stock_selector()` | 短期选股器（1-15个交易日） |
+| 4.3-7 | `long_term_stock_selector()` | 中长期选股器（1-12个月） |
+| 4.4-8 | `analyze_stock()` | 个股综合分析（技术+基本面+资金流向+风险评估+预测） |
+| 4.4-9 | `calculate_support_resistance()` | 计算支撑压力位 |
+| 4.5-10 | `setup_alert()` | 设置实时预警 |
 
 ## 目录结构
 
 ```
-openclaw_stock_research/
-├── src/openclaw_stock/           # 源代码目录
-│   ├── tools/                    # 工具脚本
-│   │   ├── ak_market_tool.py     # AkShare数据引擎
-│   │   └── web_quote_validator.py # Web验证器
-│   ├── core/                     # 核心模块
-│   │   ├── config.py             # 配置管理
-│   │   ├── exceptions.py         # 自定义异常
-│   │   └── models.py             # 数据模型
-│   ├── adapters/                 # 数据源适配器
-│   │   └── akshare_adapter.py    # AkShare适配器
-│   └── utils/                    # 工具函数
-│       ├── decorators.py         # 装饰器
-│       └── logger.py             # 日志配置
-├── SKILL.md                      # OpenClaw技能定义
-├── pyproject.toml                # 项目配置
-├── README.md                     # 本文件
-└── .env.example                  # 环境变量示例
+Stock_analysis_laozhang/
+├── SKILL.md                      # OpenClaw Skill 定义文件
+├── scripts/                      # 可执行脚本
+│   └── stock_analyzer.py         # 命令行工具
+├── src/                          # 源代码目录
+│   └── openclaw_stock/           # 主包（包含10个接口实现）
+│       ├── __init__.py           # 统一导出所有接口
+│       ├── data/                 # 数据采集模块（3个接口）
+│       │   ├── market_data.py
+│       │   ├── financial_data.py
+│       │   └── fund_flow.py
+│       ├── analysis/             # 分析模块（4个接口）
+│       │   ├── technical_analysis.py
+│       │   ├── fundamental_analysis.py
+│       │   └── stock_analyzer.py
+│       ├── selection/            # 选股模块（2个接口）
+│       │   ├── short_term.py
+│       │   ├── long_term.py
+│       │   └── scoring_model.py
+│       ├── alert/                # 预警模块（1个接口）
+│       │   └── alert_system.py
+│       ├── core/                 # 核心模块
+│       ├── adapters/             # 数据源适配器
+│       ├── tools/                # 工具模块
+│       └── utils/                # 工具函数
+├── tests/                        # 测试目录
+│   ├── unit/                     # 单元测试
+│   ├── integration/              # 集成测试
+│   └── e2e/                      # 端到端测试
+├── design_doc/                   # 设计文档
+├── FEATURES.md                   # 功能清单
+├── PROJECT_STRUCTURE.md          # 项目结构说明
+└── pyproject.toml               # Python 项目配置
 ```
 
 ## 安装说明
 
-### 方式一：VPS 一键部署（推荐）
-
-如果您在 VPS 上部署 OpenClaw，可以使用我们提供的一键部署脚本：
+### 1. 克隆仓库
 
 ```bash
-# 1. 克隆项目仓库（不要下载 zip 或使用 wget 下载单个文件）
-git clone https://github.com/bjwanneng/openclaw_stock_research.git
-cd openclaw_stock_research
-
-# 2. 执行部署脚本
-bash deploy/deploy_to_openclaw.sh
+git clone https://github.com/bjwanneng/openclaw-stock-research.git
+cd openclaw-stock-research
 ```
 
-**注意**：
-- **不要**使用 `wget` 或浏览器下载单个脚本文件，这会导致下载到 HTML 页面而不是脚本内容
-- **不要**从 GitHub 网页复制粘贴脚本内容，可能格式会被破坏
-- 必须使用 `git clone` 获取完整项目，然后执行脚本
-
-部署脚本会自动完成以下操作：
-- 检查系统依赖（Python 3.9+、Git）
-- 创建 OpenClaw 工作区目录结构
-- 克隆项目仓库
-- 创建 Python 虚拟环境并安装依赖
-- 配置环境变量（从 .env.example 复制）
-- 创建 OpenClaw 符号链接
-- 验证部署是否成功
-
-部署完成后，请记得：
-1. 编辑 `.env` 文件配置必要的环境变量（特别是 `AKSHARE_DATA_PATH`）
-2. 测试工具是否能正常运行
-
-### 方式二：手动部署
-
-#### 1. 克隆仓库
-
-```bash
-git clone https://github.com/bjwanneng/openclaw_stock_research.git
-cd openclaw_stock_research
-```
-
-#### 2. 创建虚拟环境
+### 2. 创建虚拟环境
 
 ```bash
 python -m venv venv
@@ -84,344 +86,87 @@ source venv/bin/activate  # Linux/Mac
 venv\Scripts\activate  # Windows
 ```
 
-#### 3. 安装依赖
+### 3. 安装依赖
 
 ```bash
 pip install -e .
-# 或安装开发依赖
-pip install -e ".[dev]"
 ```
 
-#### 4. 配置环境变量
+### 4. 配置环境变量
 
 ```bash
 cp .env.example .env
-# 编辑 .env 文件，配置必要的环境变量（特别是 AKSHARE_DATA_PATH）
+# 编辑 .env 文件，配置必要的环境变量
 ```
 
-#### 5. 部署到 OpenClaw
+## 使用方式
 
-**重要**：不要直接复制 tools 文件到 `custom_tools`，因为 tools 依赖 `core`、`utils`、`adapters` 等模块。正确的做法是：
-
-1. **将整个项目部署到 OpenClaw 工作区**：
-
-```bash
-# 创建 OpenClaw 工作区目录
-mkdir -p ~/.openclaw/workspace
-
-# 将整个项目复制到 OpenClaw 工作区（推荐使用软链接或 git clone）
-cd ~/.openclaw/workspace
-git clone https://github.com/bjwanneng/openclaw_stock_research.git
-
-# 或者如果当前已在项目目录，创建软链接
-# ln -s /path/to/your/project ~/.openclaw/workspace/openclaw_stock_research
-```
-
-2. **复制 wrapper 文件到 custom_tools**：
-
-项目中已提供了 wrapper 文件，它们会自动处理路径设置和模块导入：
-
-```bash
-# 创建 custom_tools 目录
-mkdir -p ~/.openclaw/workspace/custom_tools
-
-# 复制项目中提供的 wrapper 文件
-cp ~/.openclaw/workspace/openclaw_stock_research/deploy/openclaw_wrappers/ak_market_tool.py \
-    ~/.openclaw/workspace/custom_tools/
-cp ~/.openclaw/workspace/openclaw_stock_research/deploy/openclaw_wrappers/web_quote_validator.py \
-    ~/.openclaw/workspace/custom_tools/
-```
-
-**wrapper 文件说明**：
-- `ak_market_tool.py` - 自动设置 `sys.path`、加载 `.env`、导入实际的 tool
-- `web_quote_validator.py` - 同上
-- 它们位于项目的 `deploy/openclaw_wrappers/` 目录下
-
-3. **复制 Skill 文件**：
-
-```bash
-# 创建 skills 目录并复制 SKILL.md
-mkdir -p ~/.openclaw/workspace/skills/stock-research
-cp ~/.openclaw/workspace/openclaw_stock_research/SKILL.md ~/.openclaw/workspace/skills/stock-research/
-```
-
-#### 6. 配置 OpenClaw
-
-编辑 `~/.openclaw/config.json`，添加 tools 和 skills 的注册信息（添加到原有的tools和skills数组中即可）：
-
-```json
-{
-  "version": "1.0.0",
-  "python_path": "~/.openclaw/workspace/openclaw_stock_research/venv/bin/python",
-  "skills": [
-    {
-      "name": "StockAnalystPro",
-      "path": "~/.openclaw/workspace/skills/stock-research/SKILL.md",
-      "enabled": true
-    }
-  ],
-  "tools": [
-    {
-      "name": "ak_market_tool",
-      "path": "~/.openclaw/workspace/custom_tools/ak_market_tool.py",
-      "enabled": true
-    },
-    {
-      "name": "web_quote_validator",
-      "path": "~/.openclaw/workspace/custom_tools/web_quote_validator.py",
-      "enabled": true
-    }
-  ]
-}
-```
-
-**注意事项**：
-- 如果 `~/.openclaw/config.json` 已存在，请**在原有配置基础上添加**，不要覆盖原有配置
-- `python_path` 需要指向你创建的虚拟环境的 Python 解释器路径
-- `skills` 和 `tools` 是数组，将本项目的配置追加到原有数组中即可
-
-#### 7. 验证部署
-
-测试工具是否能正常运行：
-
-```bash
-# 激活虚拟环境
-source venv/bin/activate
-
-# 测试 ak_market_tool
-python -c "from openclaw_stock.tools.ak_market_tool import ak_market_tool; print('ak_market_tool 加载成功')"
-
-# 测试 web_quote_validator
-python -c "from openclaw_stock.tools.web_quote_validator import web_quote_validator_tool; print('web_quote_validator 加载成功')"
-```
-
-## 使用说明
-
-### 1. 使用 ak_market_tool
+### 1. Python 模块导入
 
 ```python
-from openclaw_stock.tools.ak_market_tool import ak_market_tool
+from src.openclaw_stock import (
+    fetch_market_data,
+    fetch_realtime_quote,
+    calculate_technical_indicators,
+    analyze_stock,
+    short_term_stock_selector,
+    long_term_stock_selector,
+    setup_alert
+)
 
 # 获取实时行情
-result = ak_market_tool(
-    action="realtime",
-    symbol="000001",
-    market="sz"
-)
+quote = fetch_realtime_quote(symbol='000001', market='sz')
 
-# 获取历史K线
-result = ak_market_tool(
-    action="kline",
-    symbol="000001",
-    market="sz",
-    period="daily",
-    start_date="20240101",
-    end_date="20240131",
-    adjust="qfq"
-)
+# 个股综合分析
+result = analyze_stock(symbol='000001', market='sz')
+
+# 短期选股
+df = short_term_stock_selector(top_n=50)
 ```
 
-## 虚拟环境自动激活（可选）
-
-### 方案一：工具脚本自动激活（推荐）
-
-工具脚本已经集成了自动检测和激活虚拟环境的功能。当工具被调用时，会自动查找并激活正确的虚拟环境。
-
-如果需要手动控制虚拟环境激活，可以使用 `venv_helper`：
-
-```python
-from openclaw_stock.utils.venv_helper import auto_activate
-
-# 在脚本开头调用，自动查找并激活虚拟环境
-auto_activate()
-
-# 后续代码将在正确的虚拟环境中运行
-from openclaw_stock.tools.ak_market_tool import ak_market_tool
-# ...
-```
-
-### 方案二：OpenClaw 启动时自动激活
-
-在 OpenClaw 的配置中，可以通过 `python_path` 指定虚拟环境的 Python 解释器路径。
-
-编辑 OpenClaw 配置文件（通常是 `~/.openclaw/config.json`）：
-
-```json
-{
-  "version": "1.0.0",
-  "python_path": "/home/username/.openclaw/workspace/openclaw-stock-research/venv/bin/python",
-  "skills": [
-    {
-      "name": "StockAnalystPro",
-      "path": "skills/stock-research/SKILL.md",
-      "enabled": true
-    }
-  ],
-  "tools": [
-    {
-      "name": "ak_market_tool",
-      "path": "custom_tools/ak_market_tool.py",
-      "enabled": true
-    },
-    {
-      "name": "web_quote_validator",
-      "path": "custom_tools/web_quote_validator.py",
-      "enabled": true
-    }
-  ]
-}
-```
-
-通过设置 `python_path` 指向虚拟环境的 Python 解释器，OpenClaw 将始终在该虚拟环境中运行所有工具和技能。
-
-### 方案三：使用激活脚本（兼容性好）
-
-在 `~/.openclaw/workspace/custom_tools/` 目录下创建激活脚本 `activate_venv.sh`：
+### 2. 命令行工具
 
 ```bash
-#!/bin/bash
-# 激活虚拟环境脚本
+# 分析个股
+python scripts/stock_analyzer.py analyze 000001 --market sz
 
-VENV_PATH="${VENV_PATH:-$HOME/.openclaw/workspace/openclaw-stock-research/venv}"
+# 短期选股
+python scripts/stock_analyzer.py select-short --top-n 50
 
-if [ -f "$VENV_PATH/bin/activate" ]; then
-    source "$VENV_PATH/bin/activate"
-    echo "已激活虚拟环境: $VENV_PATH"
-else
-    echo "错误: 找不到虚拟环境: $VENV_PATH"
-    exit 1
-fi
+# 设置预警
+python scripts/stock_analyzer.py alert-setup 000001 price "above:15.0"
 ```
 
-然后在工具的 Python 文件开头添加：
+### 3. OpenClaw Skill
 
-```python
-import os
-import subprocess
-
-# 尝试激活虚拟环境
-venv_path = os.path.expanduser("~/.openclaw/workspace/openclaw-stock-research/venv")
-if os.path.exists(f"{venv_path}/bin/activate"):
-    # 检查当前是否已在虚拟环境中
-    if not hasattr(__import__('sys'), 'real_prefix') and not (
-        hasattr(__import__('sys'), 'base_prefix') and
-        __import__('sys').base_prefix != __import__('sys').prefix
-    ):
-        # 重新执行当前脚本在虚拟环境中
-        os.execl(f"{venv_path}/bin/python", f"{venv_path}/bin/python", *sys.argv)
+```
+/stock-analysis analyze 000001
+/stock-analysis select-short
+/stock-analysis alert-setup 000001 price above:15
 ```
 
-### 2. 使用 web_quote_validator
-
-```python
-from openclaw_stock.tools.web_quote_validator import web_quote_validator_tool
-
-# 仅获取Web价格
-result = web_quote_validator_tool(
-    symbol="000001",
-    market="sz",
-    source="eastmoney"
-)
-
-# 获取Web价格并与参考价格验证
-result = web_quote_validator_tool(
-    symbol="000001",
-    market="sz",
-    source="eastmoney",
-    reference_price=10.26,
-    threshold=0.5
-)
-```
-
-### 3. 使用 StockAnalystPro Skill
-
-Skill 的执行通过 OpenClaw 框架调用，配置方式如下：
-
-1. 将 `SKILL.md` 放置在 OpenClaw 的 skills 目录下
-2. 在 `openclaw.json` 中注册该 Skill
-3. 通过 OpenClaw CLI 调用
-
-示例配置 (`openclaw.json`):
-
-```json
-{
-  "skills": [
-    {
-      "name": "StockAnalystPro",
-      "path": "~/.openclaw/workspace/skills/stock-research/SKILL.md",
-      "enabled": true
-    }
-  ],
-  "tools": [
-    {
-      "name": "ak_market_tool",
-      "path": "~/.openclaw/workspace/custom_tools/ak_market_tool.py",
-      "enabled": true
-    },
-    {
-      "name": "web_quote_validator",
-      "path": "~/.openclaw/workspace/custom_tools/web_quote_validator.py",
-      "enabled": true
-    }
-  ]
-}
-```
-
-## 开发指南
-
-### 运行测试
+## 运行测试
 
 ```bash
 # 运行所有测试
-pytest
+pytest tests/
 
-# 运行特定测试
-pytest tests/test_ak_market_tool.py
+# 运行单元测试
+pytest tests/unit/
+
+# 运行集成测试
+pytest tests/integration/
 
 # 带覆盖率报告
-pytest --cov=openclaw_stock --cov-report=html
+pytest --cov=src/openclaw_stock --cov-report=html
 ```
 
-### 代码格式化
+## 项目文档
 
-```bash
-# 使用 black 格式化
-black src tests
-
-# 使用 isort 排序导入
-isort src tests
-```
-
-### 类型检查
-
-```bash
-mypy src/openclaw_stock
-```
-
-## 部署指南
-
-### 部署到 OpenClaw 工作区
-
-1. 构建分发包:
-
-```bash
-python -m build
-```
-
-2. 安装到 OpenClaw 环境:
-
-```bash
-# 复制工具到 OpenClaw 工作区
-cp -r src/openclaw_stock/tools/* ~/.openclaw/workspace/custom_tools/
-
-# 复制 SKILL.md
-mkdir -p ~/.openclaw/workspace/skills/stock-research
-cp SKILL.md ~/.openclaw/workspace/skills/stock-research/
-```
-
-3. 更新 OpenClaw 配置:
-
-编辑 `~/.openclaw/config.json`，添加工具和技能的注册信息。
+- `design_doc/stock_anlysis_design.md` - 设计文档（含10个接口定义）
+- `SKILL.md` - OpenClaw Skill 定义
+- `FEATURES.md` - 功能清单
+- `PROJECT_STRUCTURE.md` - 项目结构说明
 
 ## 贡献指南
 

@@ -294,20 +294,22 @@ class AKMarketTool:
                 raise DataSourceError(f"无法获取{symbol}的基本面数据")
 
             # 将DataFrame转换为字典
+            info = self._normalize_info_dataframe(df)
+
             result = {
                 "symbol": symbol,
                 "market": market,
-                "pe_ttm": self._safe_float(df, "市盈率-动态"),
-                "pe_lyr": self._safe_float(df, "市盈率-静态"),
-                "pb": self._safe_float(df, "市净率"),
+                "pe_ttm": self._safe_float(info, "市盈率-动态"),
+                "pe_lyr": self._safe_float(info, "市盈率-静态"),
+                "pb": self._safe_float(info, "市净率"),
                 "ps_ttm": None,  # AkShare暂不提供
-                "dividend_yield": self._safe_float(df, "股息率"),
-                "market_cap": self._safe_float(df, "总市值"),
-                "float_market_cap": self._safe_float(df, "流通市值"),
-                "eps": self._safe_float(df, "每股收益"),
-                "bps": self._safe_float(df, "每股净资产"),
-                "roe": self._safe_float(df, "净资产收益率"),
-                "debt_ratio": self._safe_float(df, "资产负债率"),
+                "dividend_yield": self._safe_float(info, "股息率"),
+                "market_cap": self._safe_float(info, "总市值"),
+                "float_market_cap": self._safe_float(info, "流通市值"),
+                "eps": self._safe_float(info, "每股收益"),
+                "bps": self._safe_float(info, "每股净资产"),
+                "roe": self._safe_float(info, "净资产收益率"),
+                "debt_ratio": self._safe_float(info, "资产负债率"),
             }
 
             logger.info(f"[AKMarketTool] 成功获取 {symbol} 的基本面数据")
@@ -317,26 +319,41 @@ class AKMarketTool:
             logger.error(f"[AKMarketTool] 获取基本面数据失败: {str(e)}")
             raise DataSourceError(f"获取{market}:{symbol}基本面数据失败: {str(e)}")
 
-    def _safe_float(self, df, column: str) -> Optional[float]:
-        """
-        安全地从DataFrame获取浮点数值
+    def _normalize_info_dataframe(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """将 AkShare 返回的个股信息标准化为字典"""
+        if df.empty:
+            return {}
 
-        Args:
-            df: DataFrame
-            column: 列名
+        if "item" in df.columns and "value" in df.columns:
+            return {
+                str(item).strip(): value
+                for item, value in df[["item", "value"]].itertuples(index=False)
+            }
 
-        Returns:
-            浮点数值，如果失败则返回None
-        """
+        row = df.iloc[0]
+        return row.to_dict()
+
+    def _safe_float(self, data, column: str) -> Optional[float]:
+        """安全地从数据中提取浮点数"""
         try:
-            if column in df.columns:
-                value = df[column].values[0]
-                if pd.isna(value):
-                    return None
-                return float(value)
-        except (ValueError, IndexError, TypeError):
-            pass
-        return None
+            value = None
+
+            if isinstance(data, dict):
+                value = data.get(column)
+            elif isinstance(data, pd.DataFrame) and column in data.columns:
+                value = data[column].values[0]
+            elif hasattr(data, column):
+                value = getattr(data, column)
+
+            if value is None:
+                return None
+
+            if isinstance(value, float) and pd.isna(value):
+                return None
+
+            return float(value)
+        except (ValueError, IndexError, TypeError, AttributeError):
+            return None
 
     def get_capital_flow(
         self,

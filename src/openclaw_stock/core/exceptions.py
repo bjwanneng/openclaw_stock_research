@@ -114,3 +114,25 @@ class RateLimitError(NetworkError):
 
     def __str__(self):
         return f"[RateLimitError] {self.message}"
+
+
+class CalculationError(StockResearchError):
+    """计算异常 - 指标计算过程中发生错误"""
+
+    def __init__(self, message: str = "计算失败"):
+        self.message = message
+        super().__init__(message)
+
+    def __str__(self):
+        return f"[CalculationError] {self.message}"
+
+
+class AlertError(StockResearchError):
+    """预警异常 - 预警系统相关错误"""
+
+    def __init__(self, message: str = "预警操作失败"):
+        self.message = message
+        super().__init__(message)
+
+    def __str__(self):
+        return f"[AlertError] {self.message}"
