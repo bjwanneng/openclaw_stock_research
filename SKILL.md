@@ -7,6 +7,57 @@ allowed-tools: [Read, Grep, Glob, Bash, Task]
 
 # 股票分析与选股系统
 
+## 虚拟环境配置（重要）
+
+本技能依赖 Python 虚拟环境。Skill 执行前必须确保虚拟环境已激活，或使用虚拟环境的 Python 解释器。
+
+### 自动激活方案
+
+项目提供了 `run.sh` 脚本，自动处理虚拟环境激活：
+
+```bash
+# 使用 run.sh 运行测试（推荐）
+./run.sh test -v
+
+# 使用 run.sh 运行分析
+./run.sh analyze 000001 --market sz
+
+# 使用 run.sh 进入 Python shell
+./run.sh shell
+```
+
+### 手动指定 Python 路径
+
+如果不想使用 run.sh，可直接使用虚拟环境的 Python：
+
+```bash
+# 直接使用虚拟环境的 Python 运行
+./venv/bin/python -m pytest tests/ -v
+
+# 或运行脚本
+./venv/bin/python scripts/stock_analyzer.py analyze 000001
+```
+
+### 传统方式（手动激活）
+
+```bash
+# 手动激活虚拟环境
+source venv/bin/activate  # Linux/Mac
+# 或 venv\Scripts\activate  # Windows
+
+# 然后运行命令
+pytest tests/ -v
+```
+
+### Skill 执行检查清单
+
+执行本技能前，请确认：
+
+1. [ ] 虚拟环境目录 `venv/` 存在
+2. [ ] 使用 `./run.sh` 或 `./venv/bin/python` 运行命令
+3. [ ] 项目已安装：`pip install -e .`
+4. [ ] 环境变量文件 `.env` 已配置（如需要）
+
 ## 工具位置
 
 本技能依赖的 Python 模块位于项目源代码目录：
