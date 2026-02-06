@@ -13,17 +13,17 @@ allowed-tools: [Read, Grep, Glob, Bash, Task]
 
 ### 自动激活方案
 
-项目提供了 `run.sh` 脚本，自动处理虚拟环境激活：
+项目提供了 `run.sh` 脚本，自动处理虚拟环境激活。**重要：在某些环境下执行可能需要先运行 `chmod +x run.sh` 授予执行权限，并使用 `PYTHONPATH=.` 确保模块导入正确。**
 
 ```bash
-# 使用 run.sh 运行测试（推荐）
-./run.sh test -v
+# 授予执行权限（仅需一次）
+chmod +x run.sh
 
-# 使用 run.sh 运行分析
-./run.sh analyze 000001 --market sz
+# 使用 run.sh 运行分析（推荐带上 PYTHONPATH）
+PYTHONPATH=. ./run.sh analyze 000001 --market sz
 
-# 使用 run.sh 进入 Python shell
-./run.sh shell
+# 导出完整分析报告到 JSON
+PYTHONPATH=. ./run.sh analyze 000001 --market sz --output /root/.openclaw/workspace/report.json
 ```
 
 ### 手动指定 Python 路径
@@ -442,11 +442,12 @@ alert_id = setup_alert(
 
 ## 注意事项
 
-1. **数据延迟**: 实时行情数据可能有15分钟延迟（交易所规定）
-2. **港股限制**: 部分功能（如北向资金）仅适用于A股
-3. **频率限制**: 注意akshare的API调用频率限制
-4. **风险提示**: 本系统仅供参考，不构成投资建议
-5. **数据准确性**: 财务数据以公司公告为准
+1. **执行环境**：确保在 `run.sh` 所在目录执行，或使用绝对路径。执行时建议加上 `PYTHONPATH=.` 以解决 `src` 模块导入问题。
+2. **数据深度**：`analyze` 命令默认返回简要总结。如需深度研判（均线数值、详细指标、资金明细），必须使用 `--output` 参数保存 JSON 报告并读取其中的 `technical_analysis` 和 `fund_flow_analysis` 字段。
+3. **公开信息结合**：本技能仅提供技术和基本面量化数据。在给出最终建议前，应配合 `web_fetch` 获取最新的市场动态和新闻，以进行综合研判。
+4. **数据延迟**: 实时行情数据可能有15分钟延迟（交易所规定）
+5. **港股限制**: 部分功能（如北向资金）仅适用于A股
+6. **风险提示**: 本系统仅供参考，不构成投资建议
 
 ## 版本信息
 
