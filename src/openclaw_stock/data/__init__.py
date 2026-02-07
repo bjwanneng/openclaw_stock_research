@@ -1,7 +1,7 @@
 """
 数据采集模块
 
-提供股票行情、财务数据、资金流向等数据的采集功能
+提供股票行情、财务数据、资金流向、新闻等数据的采集功能
 """
 
 from .market_data import (
@@ -21,6 +21,10 @@ from .fund_flow import (
     fetch_north_bound_flow,
     FundFlowCollector
 )
+from .news_data import (
+    fetch_stock_news,
+    NewsDataCollector
+)
 
 __all__ = [
     # 市场数据
@@ -37,4 +41,7 @@ __all__ = [
     'fetch_capital_flow',
     'fetch_north_bound_flow',
     'FundFlowCollector',
+    # 新闻数据
+    'fetch_stock_news',
+    'NewsDataCollector',
 ]

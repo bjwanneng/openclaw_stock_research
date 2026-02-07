@@ -15,6 +15,7 @@ from ..utils.logger import get_logger
 from ..data.market_data import fetch_market_data, fetch_realtime_quote
 from ..data.financial_data import fetch_financial_data
 from ..data.fund_flow import fetch_fund_flow, fetch_capital_flow
+from ..data.news_data import fetch_stock_news
 from ..analysis.technical_analysis import (
     calculate_technical_indicators,
     calculate_support_resistance,
@@ -98,6 +99,7 @@ def analyze_stock(
             "technical_analysis": {},
             "fundamental_analysis": {},
             "fund_flow_analysis": {},
+            "news_analysis": {},
             "risk_assessment": {},
             "prediction": {}
         }
@@ -219,7 +221,32 @@ def analyze_stock(
         except Exception as e:
             logger.warning(f"[{symbol}] 资金流向分析失败: {e}")
 
-        # 5. 风险评估
+        # 5. 新闻分析
+        try:
+            # 获取股票名称
+            stock_name = result.get("basic_info", {}).get("name", "")
+            
+            # 获取新闻数据
+            news_data = fetch_stock_news(symbol=symbol, stock_name=stock_name, limit=10)
+            
+            result["news_analysis"] = {
+                "news_count": news_data.get("news_count", 0),
+                "news_list": news_data.get("news_list", []),
+                "summary": news_data.get("summary", ""),
+                "fetch_time": news_data.get("fetch_time", "")
+            }
+            
+            logger.info(f"[{symbol}] 获取到 {news_data.get('news_count', 0)} 条新闻")
+        except Exception as e:
+            logger.warning(f"[{symbol}] 新闻分析失败: {e}")
+            result["news_analysis"] = {
+                "news_count": 0,
+                "news_list": [],
+                "summary": "新闻获取失败",
+                "error": str(e)
+            }
+
+        # 6. 风险评估
         try:
             risk_factors = []
 
@@ -458,6 +485,7 @@ class StockAnalyzer:
         technical = analysis_result.get("technical_analysis", {})
         fundamental = analysis_result.get("fundamental_analysis", {})
         fund_flow = analysis_result.get("fund_flow_analysis", {})
+        news = analysis_result.get("news_analysis", {})
         risk = analysis_result.get("risk_assessment", {})
         prediction = analysis_result.get("prediction", {})
 
@@ -554,7 +582,31 @@ class StockAnalyzer:
         lines.extend([
             "",
             "-" * 60,
-            "【四、风险评估】",
+            "【四、新闻面分析】",
+            "-" * 60,
+        ])
+
+        if news and news.get("news_count", 0) > 0:
+            lines.append(f"近期相关新闻：{news.get('news_count', 0)} 条")
+            lines.append("")
+            
+            news_list = news.get("news_list", [])
+            for i, item in enumerate(news_list[:5], 1):  # 只显示前5条
+                time_str = f"[{item.get('time', '')}] " if item.get('time') else ""
+                lines.append(f"{i}. {time_str}{item.get('title', '')}")
+                if item.get('summary'):
+                    lines.append(f"   {item.get('summary', '')[:80]}...")
+                lines.append("")
+            
+            if len(news_list) > 5:
+                lines.append(f"... 还有 {len(news_list) - 5} 条新闻")
+        else:
+            lines.append("暂无相关新闻或新闻获取失败")
+
+        lines.extend([
+            "",
+            "-" * 60,
+            "【五、风险评估】",
             "-" * 60,
         ])
 
@@ -583,7 +635,7 @@ class StockAnalyzer:
         lines.extend([
             "",
             "-" * 60,
-            "【五、后市预测】",
+            "【六、后市预测】",
             "-" * 60,
         ])
 

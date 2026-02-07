@@ -52,6 +52,9 @@ from .data import (
     fetch_capital_flow,
     fetch_north_bound_flow,
     FundFlowCollector,
+    # 新闻数据
+    fetch_stock_news,
+    NewsDataCollector,
 )
 
 # 指标计算接口 (4.2节)
@@ -125,6 +128,8 @@ __all__ = [
     "fetch_capital_flow",
     "fetch_north_bound_flow",
     "FundFlowCollector",
+    "fetch_stock_news",
+    "NewsDataCollector",
 
     # 指标计算接口 (4.2节)
     "calculate_technical_indicators",
